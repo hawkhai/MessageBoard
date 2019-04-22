@@ -298,6 +298,48 @@ else{
 
 ![](https://i.imgur.com/AS2asLv.png)
 
+# [cookie与session](#cookie与session)
+
+## 无状态HTTP
+
+HTTP请求头：
+- Content-Type: 服务器发送的内容的MIME类型
+- Cookie：设置的cookie值
+
+
+HTTP响应头：
+- Content-Disposition: 指示客户端下载文件
+- Set-Cookie: 第一次访问服务器端，服务器端返回的cookie
+
+不同浏览器存储cookie位置是不一样的
+
+## 设置cookie
+
+cookie.php   
+``` php
+<?php
+/*第一个参数为cookie名字，第二个参数为cookie的值
+time()为当前时间戳，加3600代表cookie有效期为从现在起一小时*/
+
+setcookie('username', 'admin', time()+3600);
+
+```
+
+现在访问这个页面，之后在浏览器设置中可以看到cookie的详细信息：
+
+![](https://i.imgur.com/Sedl8wv.png)
+
+而且可以在network中看到响应头：
+
+    Set-Cookie: username=admin; expires=Mon, 22-Apr-2019 15:50:42 GMT; Max-Age=3600
+
+可以看到返回的cookie的名字和数据，以及失效时间(expires)
+
+第一次请求时在请求头中并不会看到cookie这个字段，但刷新页面，会发现请求头中多出来了：
+
+	Cookie: username=admin
+
+
 
 # [数据库管理](#数据库管理)
 
