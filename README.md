@@ -13,18 +13,24 @@
 - 前端设计
 	- [留言板页面布局](#留言板页面布局)
 - 后端设计
-	- [php实现](#php实现)
+	- [php对mysql的操作](#php对mysql的操作)
+	- [验证码设计](#验证码设计)
+	- [cookie与session](#cookie与session)
 	- [数据库管理](#数据库管理)
-- 会话管理
-	- [cookie、session模式](#cookie、session模式)
 
 环境：
 
 - windows10
 - phpstudy2018，PHP-5.5.38
 
-# php操作mysql
-## 选择pdo操作数据库
+# [php对mysql的操作](#php对mysql的操作)
+
+- [选择数据库api](#选择数据库api)
+- [连接数据库](#连接数据库)
+- [操作数据库](#操作数据库)
+
+
+## [选择数据库api](#选择数据库api)
 
 php连接mysql的三种方式：
 
@@ -46,7 +52,7 @@ PDO 提供了一个 数据访问 抽象层，这意味着，不管使用哪种�
 
 ![](https://i.imgur.com/UIm2AmF.png)
 
-## 使用pdo连接数据库
+## [连接数据库](#连接数据库)
 
 以前我都是用mysql进行练习数据库的使用，于是把每次进去的用户名和密码给省去了，但在项目中用户名和密码可不能省略
 
@@ -79,10 +85,13 @@ try{
 ?>
 ```
 
-## 操作数据库
+## [操作数据库](#操作数据库)
 使用创建好的pdo对象来实现对数据表的增、删、改、查;
 
-实现很简单，只需调用pdo对象的exec方法，执行相应的mysql语句即可
+实现很简单，根据mysql语句，调用pdo对象的方法即可：
+
+- exec: 执行一条 SQL 语句，并返回受影响的行数 (执行无结果集的语句)
+- query: 返回一个 PDOStatement object，遍历这个对象可以获取数据 (执行有结果集的语句)
 
 ``` php
 <?php
@@ -107,13 +116,16 @@ $sql = 'create table hello(
     	);';
 */
 
+# 查询数据
+$sql = 'select * from hello';
 
+
+/*删除表
 $sql = 'drop table hello';
-
+*/
 
 /*添加数据
 $sql = "insert into hello(id, email, age) values (1,'123456789@qq.com', 18)";
-
 */
 
 /*修改数据
@@ -124,7 +136,174 @@ $sql = "update hello set email='123@qq.com', age=20 where id=1";
 $sql = "delete from hello where id=1";
 */
 
+$res = $pdo->query($sql);
+
+foreach ($res as $row) {
+	echo $row['id']."<br>";
+	echo $row['email']."<br>";
+	echo $row['age'];
+}
+
+/*
 $res = $pdo->exec($sql);
 var_dump($res);
+*/
 ?>
 ```
+
+# [验证码设计](#验证码设计)
+
+- [基本使用](#基本使用)
+- [验证码的基本实现](#验证码的基本实现)
+
+
+## [基本使用](#基本使用)
+
+php中的GD库可以创建和处理图像
+
+``` php
+<?php
+
+//创建画布,参数为画布大小
+$img = imagecreatetruecolor(400, 400);
+
+//设置颜色,第一个参数为画布，后面三个参数为三原色red、green、blue，用0-255表示深度
+$white = imagecolorallocate($img, 255, 255, 255);
+$black = imagecolorallocate($img, 0, 0, 0);
+$red = imagecolorallocate($img, 255, 0, 0);
+$green = imagecolorallocate($img, 0, 255, 0);
+$blue = imagecolorallocate($img, 0, 0, 255);
+
+
+//更改图像背景，图像背景默认为黑色
+imagefill($img, 0, 0, $white);
+
+/*画一条线，第二个参数到第四个参数为起点x轴、起点y轴、终点x轴、终点y轴
+第一个参数为画布，第四个参数为颜色*/
+imageline($img, 0, 0, 400, 400, $red);
+
+//告诉浏览器如何解析图像
+header('content-type:image/png');
+
+//输出png图像
+imagepng($img);
+
+//释放资源
+imagedestroy($img);
+
+```
+
+运行显示：
+
+![](https://i.imgur.com/nL4NXXA.png)
+
+## [验证码的基本实现](#验证码的基本实现)
+
+还未学到cookie和session的设计，先用文件操作来进行验证码的验证
+
+- file_get_contents():将整个文件读入一个字符串
+- file_put_contents(filename， data):将一个字符串写入文件，文件不存在则新建文件，若存在则默认覆盖原文件内容
+
+文件结构：
+
+	WWW\MessageBoard
+		-login.php
+		-vcode.php
+		-vcode.txt
+		-vertify.php
+
+其中，vcode.txt可以自动生成，且里面的内容为当前页面的验证码
+
+
+login.php
+
+	<!DOCTYPE html>
+	
+	<html>
+	<head>
+		<meta charset="utf-8">
+		<title>验证码</title>
+	</head>
+	<body>
+		<form action="./vertify.php", method="post">
+			<input type="text" name="username" placeholder='username'><br>
+			<input type="password" name="password" placeholder='password'><br>
+			<input type="text" name="vcode" placeholder='验证码'>
+			<img src="./vcode.php"><br>
+			<p style="margin-left: 50px;"><input type="submit" name="submit"></p>
+			
+		</form>
+	</body>
+	</html>
+
+vcode.php
+
+``` php
+<?php
+
+
+class Vcode
+{
+	
+	public function outimage()
+	{
+		$str = rand(1000, 9999);
+		file_put_contents('vcode.txt', $str);
+		//创建画布
+		$img = imagecreatetruecolor(40, 20);
+
+		//设置颜色
+		$white = imagecolorallocate($img, 255, 255, 255);
+		$black = imagecolorallocate($img, 0, 0, 0);
+
+		//填充背景为黑色
+		imagefill($img, 0, 0, $black);
+
+		//画字符串
+		imagestring($img, 5, 0, 3, $str, $white);
+
+		//输出图像
+		header('content-type:image/png;charset="utf-8"');
+		imagepng($img);
+
+		//销毁资源
+		imagedestroy($img);
+
+
+	}
+}
+
+$vcode=new Vcode();
+$vcode->outimage();
+```
+
+vertify.php
+
+``` php
+<?php
+
+$vcode = file_get_contents('vcode.txt');
+
+$input = $_POST['vcode'];
+
+if($input === $vcode){
+	echo 'right';
+}
+else{
+	echo 'wrong';
+}
+```
+
+效果：
+
+![](https://i.imgur.com/AS2asLv.png)
+
+
+# [数据库管理](#数据库管理)
+
+用数据库需要存储用户的：
+
+- 用户名
+- 留言时间
+- 留言内容
+
