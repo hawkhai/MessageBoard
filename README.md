@@ -13,9 +13,9 @@
 - 前端设计
 	- [留言板页面布局](#留言板页面布局)
 - 后端设计
-	- [php对mysql的操作](#php对mysql的操作)
+	- [php操作数据库](#php操作数据库)
 	- [验证码设计](#验证码设计)
-	- [cookie与session](#cookie与session)
+	- [会话管理](#会话管理)
 	- [数据库管理](#数据库管理)
 
 环境：
@@ -23,7 +23,7 @@
 - windows10
 - phpstudy2018，PHP-5.5.38
 
-# [php对mysql的操作](#php对mysql的操作)
+# [php操作数据库](#php操作数据库)
 
 - [选择数据库api](#选择数据库api)
 - [连接数据库](#连接数据库)
@@ -153,11 +153,11 @@ var_dump($res);
 
 # [验证码设计](#验证码设计)
 
-- [基本使用](#基本使用)
+- [GD库的基本使用](#GD库的基本使用)
 - [验证码的基本实现](#验证码的基本实现)
 
 
-## [基本使用](#基本使用)
+## [GD库的基本使用](#GD库的基本使用)
 
 php中的GD库可以创建和处理图像
 
@@ -298,9 +298,15 @@ else{
 
 ![](https://i.imgur.com/AS2asLv.png)
 
-# [cookie与session](#cookie与session)
+# [会话管理](#会话管理)
 
-## 无状态HTTP
+- [无状态HTTP](#无状态HTTP)
+- [设置cookie](#设置cookie)
+- [获取cookie](#获取cookie)
+- [删除cookie](#删除cookie)
+
+
+## [无状态HTTP](#无状态HTTP)
 
 HTTP请求头：
 - Content-Type: 服务器发送的内容的MIME类型
@@ -311,12 +317,11 @@ HTTP响应头：
 - Content-Disposition: 指示客户端下载文件
 - Set-Cookie: 第一次访问服务器端，服务器端返回的cookie
 
-不同浏览器存储cookie位置是不一样的
 
-## 设置cookie
+## [设置cookie](#设置cookie)
 
-cookie.php   
-``` php
+
+``` php cookie.php   
 <?php
 /*第一个参数为cookie名字，第二个参数为cookie的值
 time()为当前时间戳，加3600代表cookie有效期为从现在起一小时*/
@@ -333,12 +338,67 @@ setcookie('username', 'admin', time()+3600);
 
     Set-Cookie: username=admin; expires=Mon, 22-Apr-2019 15:50:42 GMT; Max-Age=3600
 
-可以看到返回的cookie的名字和数据，以及失效时间(expires)
+可以看到返回的cookie的名字和数据，以及失效时间(expires)；到了失效时间，浏览器会自动删除cookie；不同浏览器存储cookie位置是不一样的，即不同浏览器不会共享cookie
 
 第一次请求时在请求头中并不会看到cookie这个字段，但刷新页面，会发现请求头中多出来了：
 
 	Cookie: username=admin
 
+## [获取cookie](#获取cookie)
+
+$_COOKIE:超全局数组，获取传递过来的cookie
+
+``` php cookie.php    
+<?php
+
+var_dump($_COOKIE);
+
+setcookie('username', 'admin', time()+3600);
+```
+
+这样就可以获取到cookie；如果第一次访问是不会显示cookie的，只有服务端发送了cookie给客户端，客户端第二次请求的时候才能显示：
+
+![](https://i.imgur.com/w2EaAXI.png)
+
+那么，在服务端的哪些位置可以使用$_COOKIE获取cookie呢？
+
+setcookie函数一共有七个参数，除了上面三个常用的参数，第四个参数还可以设置cookie的位置；在默认的情况下(不设置第四个参数)，同级目录下的文件都可以获取到cookie
+
+比如，现在文件路径为`\WWW\MessageBoard\cookie.php`，那么在默认情况下，`\WWW\MessageBoard\`目录下的所有文件都可以通过$_COOKIE获取cookie
+
+现在想让`\WWW\`下的所有文件获取cookie.php中的cookie，那么只需设置cookie路径为根目录即可：
+
+``` php
+<?php
+
+setcookie('username', 'admin', time()+3600, '\')
+```
+
+除了用第四个参数设置路径，还可通过设置第五个参数域名设置cookie
+
+setcookie最后两个参数：
+
+- secure
+设置成 TRUE 时，只有HTTPS连接存在时才会设置 Cookie。
+- httponly
+设置成 TRUE，Cookie 仅可通过 HTTP 协议访问。
+
+## [删除cookie](#删除cookie)
+
+可以通过设置cookie过期时间来删除cookie：
+
+``` php
+<?php
+
+echo "<pre>";
+var_dump($_COOKIE);
+
+setcookie('username', '', time()-1);
+```
+
+此时刷新两次页面后，在请求头中便找不到cookie这个字段了；在响应头中发现：
+
+	Set-Cookie: username=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0
 
 
 # [数据库管理](#数据库管理)
