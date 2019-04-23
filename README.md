@@ -320,8 +320,8 @@ HTTP响应头：
 
 ## [设置cookie](#设置cookie)
 
-
-``` php [cookie.php]
+cookie.php  
+``` php 
 <?php
 /*第一个参数为cookie名字，第二个参数为cookie的值
 time()为当前时间戳，加3600代表cookie有效期为从现在起一小时*/
@@ -348,7 +348,8 @@ setcookie('username', 'admin', time()+3600);
 
 $_COOKIE:超全局数组，获取传递过来的cookie
 
-``` php cookie.php    
+cookie.php  
+``` php   
 <?php
 
 var_dump($_COOKIE);
