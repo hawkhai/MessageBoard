@@ -206,7 +206,7 @@ imagedestroy($img);
 
 文件结构：
 
-	WWW\MessageBoard
+	\WWW\MessageBoard
 		-login.php
 		-vcode.php
 		-vcode.txt
@@ -321,7 +321,7 @@ HTTP响应头：
 ## [设置cookie](#设置cookie)
 
 
-``` php cookie.php   
+``` php [cookie.php]
 <?php
 /*第一个参数为cookie名字，第二个参数为cookie的值
 time()为当前时间戳，加3600代表cookie有效期为从现在起一小时*/
