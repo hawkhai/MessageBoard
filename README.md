@@ -169,13 +169,13 @@ var_dump($res);
 
 ## [异常处理](#异常处理)
 
-由于留言板上要显示用户名，因此设置用户名为不可重复的；在注册的时候，使用的语句为`insert into`，如果username字段设置了unique，且注册时输入的用户名已存在，默认情况下是不会报错的，且数据库没有添加数据；
+需要设置用户名为不可重复的；在注册的时候，使用的语句为`insert into`，如果username字段设置了unique，且注册时输入的用户名已存在，默认情况下是不会报错的，此时数据库也没有添加数据；
 
 - errorCode(): 获取跟数据库句柄上一次操作相关的 SQLSTATE；如果没有任何错误, errorCode() 返回的是: '00000'
 
-则可以用pdo对象调用这个方法，根据值是否是'00000'来判断sql语句执行情况
+则可以用pdo对象调用这个方法，根据值是否是'00000'来判断sql语句执行情况(这里的五个0位string类型)
 
-但执行query方法时，并不能看到是否执行成功，不知道原因是什么...
+但执行query方法时，并不能用此方法看到是否执行成功，返回的错误码均为'00000'不知道原因是什么...
 
 # [验证码设计](#验证码设计)
 
@@ -230,47 +230,13 @@ imagedestroy($img);
 - file_get_contents():将整个文件读入一个字符串
 - file_put_contents(filename， data):将一个字符串写入文件，文件不存在则新建文件，若存在则默认覆盖原文件内容
 
-文件结构：
+制作简单的验证码图片就是将随机数绘制到画布上；验证验证码时，可以将随机数写入到文件，之后取出与输入的验证码作对比，一致则验证成功
 
-	WWW\MessageBoard
-		-login.php
-		-vcode.php
-		-vcode.txt
-		-vertify.php
-
-其中，vcode.txt可以自动生成，且里面的内容为当前页面的验证码
-
-
-login.php
-
-	<!DOCTYPE html>
-	
-	<html>
-	<head>
-		<meta charset="utf-8">
-		<title>验证码</title>
-	</head>
-	<body>
-		<form action="./vertify.php", method="post">
-			<input type="text" name="username" placeholder='username'><br>
-			<input type="password" name="password" placeholder='password'><br>
-			<input type="text" name="vcode" placeholder='验证码'>
-			<img src="./vcode.php"><br>
-			<p style="margin-left: 50px;"><input type="submit" name="submit"></p>
-			
-		</form>
-	</body>
-	</html>
-
-vcode.php
-
+绘制验证码：
 ``` php
 <?php
-
-
 class Vcode
 {
-	
 	public function outimage()
 	{
 		$str = rand(1000, 9999);
@@ -285,7 +251,7 @@ class Vcode
 		//填充背景为黑色
 		imagefill($img, 0, 0, $black);
 
-		//画字符串
+		//画字符串，第二个参数为字体大小
 		imagestring($img, 5, 0, 3, $str, $white);
 
 		//输出图像
@@ -294,8 +260,6 @@ class Vcode
 
 		//销毁资源
 		imagedestroy($img);
-
-
 	}
 }
 
@@ -303,26 +267,7 @@ $vcode=new Vcode();
 $vcode->outimage();
 ```
 
-vertify.php
 
-``` php
-<?php
-
-$vcode = file_get_contents('vcode.txt');
-
-$input = $_POST['vcode'];
-
-if($input === $vcode){
-	echo 'right';
-}
-else{
-	echo 'wrong';
-}
-```
-
-效果：
-
-![](https://i.imgur.com/AS2asLv.png)
 
 # [会话管理](#会话管理)
 
