@@ -349,7 +349,8 @@ setcookie('username', 'admin', time()+3600);
 
 $_COOKIE:超全局数组，获取传递过来的cookie
 
-``` php cookie.php    
+cookie.php    
+``` php     
 <?php
 
 var_dump($_COOKIE);
@@ -417,13 +418,12 @@ session.php
 
 session_start();
 /*首先判断$_COOKIE[session_name()]是否有值，即是否存在session_id；
-为空则会生成一个session_id，之后将session_id加上前缀`sess_`生成文件，然后通过cookie的方式传到客户端，即相当于$_COOKIE[session_name()] = session_id
+为空则会生成一个session_id，之后将session_id加上前缀`sess_`生成文件，然后通过cookie的方式传到客户端
 */
 
 $_SESSION['username'] = 'jack';
-//给SESSION这个数组里面添加值；之后会将名称`username`直接写入session文件中；
-数据'jack'根据session.serialize_handler设置的序列化方法存储到session文件中
-
+/*给SESSION这个数组里面添加值；之后会将名称`username`直接写入session文件中；数据'jack'根据session.serialize_handler设置的序列化方法存储到session文件中
+*/
 ```
 
 访问这个页面，会发现响应头有这个字段：
