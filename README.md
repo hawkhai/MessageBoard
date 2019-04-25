@@ -26,7 +26,7 @@
 ---
 2019.4.25
 
-弄了几乎一天，用最近学的知识做了简单的实现注册登陆功能[login_and_register](#login_and_register)
+弄了几乎一天，用最近学的知识做了简单的实现注册登陆功能[login_and_register](login_and_register)
 
 文件结构：
 
