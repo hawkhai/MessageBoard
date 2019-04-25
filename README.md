@@ -310,7 +310,7 @@ else{
 ## [无状态HTTP](#无状态HTTP)
 
 HTTP请求头：
-- Content-Type: 服务器发送的内容的MIME类型
+- Content-Type: 发送的内容的MIME类型
 - Cookie：设置的cookie值
 
 
@@ -391,19 +391,14 @@ setcookie最后两个参数：
 
 ``` php
 <?php
-
-echo "< pre >";
 var_dump($_COOKIE);
 
 setcookie('username', '', time()-1);
-
 ```
-
 
 此时刷新两次页面后，在请求头中便找不到cookie这个字段了；在响应头中发现：
 
 	Set-Cookie: username=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0
-
 
 ## [session](#session)
 
@@ -417,12 +412,14 @@ session.php
 <?php
 
 session_start();
-/*首先判断$_COOKIE[session_name()]是否有值，即是否存在session_id；
+/*
+首先判断$_COOKIE[session_name()]是否有值，即是否存在session_id；
 为空则会生成一个session_id，之后将session_id加上前缀`sess_`生成文件，然后通过cookie的方式传到客户端
 */
 
 $_SESSION['username'] = 'jack';
-/*给SESSION这个数组里面添加值；之后会将名称`username`直接写入session文件中；数据'jack'根据session.serialize_handler设置的序列化方法存储到session文件中
+/*
+给SESSION这个数组里面添加值；之后会将名称`username`直接写入session文件中；数据'jack'根据session.serialize_handler设置的序列化方法存储到session文件中
 */
 ```
 
@@ -442,7 +439,7 @@ $_SESSION['username'] = 'jack';
 session文件保存的位置或其他有关session的配置可以在`php.ini`中查看和修改；使用的php版本为5.5.38，则可以在`phpStudy\PHPTutorial\php\php-5.5.38`中找到对应的php.ini
 
 - session.save_handler = files 使用文件的方式来保存session 
-- session.save_path 保存目录
+- session.save_path 保存路径
 - session.use_strict_mode = 0 严格模式不能接收未初始化的session_id
 - session.auto_start = 0 是否默认开启session
 - session.serialize_handler = php 序列化句柄；设置存储session的序列化方式，默认为php的serialize()
