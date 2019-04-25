@@ -276,6 +276,7 @@ $vcode->outimage();
 - [获取cookie](#获取cookie)
 - [删除cookie](#删除cookie)
 - [session](#session)
+- [cookie与session，用哪个？](#cookie与session，用哪个？)
 
 
 ## [无状态HTTP](#无状态HTTP)
@@ -384,13 +385,13 @@ session.php
 
 session_start();
 /*
-首先判断$_COOKIE[session_name()]是否有值，即是否存在session_id；
-为空则会生成一个session_id，之后将session_id加上前缀`sess_`生成文件，然后通过cookie的方式传到客户端
+首先判断$_COOKIE[session_name()]是否有值，即是否存在session_id；为空则会生成一个session_id，之后将session_id加上前缀`sess_`生成文件，并且通过cookie的方式将session_id传到客户端
+如果存在，则会查找这个session_id对应的文件，找到后会反序列化这个文件的内容，将这些内容存到$_SESSION中；如果没找到对应的文件，则会根据这个session_id新建一个session文件
 */
 
 $_SESSION['username'] = 'jack';
 /*
-给SESSION这个数组里面添加值；之后会将名称`username`直接写入session文件中；数据'jack'根据session.serialize_handler设置的序列化方法存储到session文件中
+给SESSION这个数组里面添加值；脚本结束之后会将名称`username`直接写入session_start()获得的session_id对应的session文件中；数据'jack'根据session.serialize_handler设置的序列化方法存储到session文件中
 */
 ```
 
@@ -414,7 +415,32 @@ session文件保存的位置或其他有关session的配置可以在`php.ini`中
 - session.use_strict_mode = 0 严格模式不能接收未初始化的session_id
 - session.auto_start = 0 是否默认开启session
 - session.serialize_handler = php 序列化句柄；设置存储session的序列化方式，默认为php的serialize()
-- session.gc_maxlifetime = 1440 session过期时间
+
+## session销毁
+
+session.php   
+``` php
+<?php
+
+session_start();
+
+$_SESSION['name'] = 'jack';
+```
+
+现在，访问这个页面，会在temp目录下找到对应的session文件，查看属性：
+
+![](https://i.imgur.com/ZZCUSj1.png)
+
+创建时间和修改时间是一样的；再次访问这个页面，可以看到修改时间发生了改变：
+
+![](https://i.imgur.com/TIkVfFV.png)
+
+原因是：再次访问这个页面时，由于通过cookie传过去了session_id，则会反序列化这个session文件的内容，存到$_SESSION中；虽然没有改变键值对数据，但脚本运行完还是会将$_SESSION内容进行序列化存到session文件中，即不管有没有改变，都会覆盖掉以前的数据
+
+php.ini:
+
+- session.gc_maxlifetime = 1440 经过1440s后文件没有改动，被认为此session文件是过期文件
+- session.gc_divisor = 1000 session_start()启动1000次，会启动垃圾回收机制，删除过期文件；
 
 
 
