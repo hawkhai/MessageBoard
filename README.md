@@ -34,7 +34,7 @@
 	-login.php 根据接收到的vcode、username与password判断是否登陆成功
 	-register.html 注册页面，通向login.html和register.php
 	-register.php 根据接收到的vcode、username与password判断是否注册成功
-	-vcode.php 生成二维码
+	-vcode.php 生成验证码
 	-sql.php 封装好了一个用于php操作mysql的类
 
 
