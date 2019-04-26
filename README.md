@@ -40,7 +40,7 @@
 ---
 2019.4.26
 
-了解了session的基本原理，简单实现了用户的登录和登出功能[session_login_and_logout](#session_login_and_logout)
+了解了session的基本原理，简单实现了用户的登录和登出功能[session_login_and_logout](session_login_and_logout)
 
 文件结构：
 
@@ -434,7 +434,7 @@ session文件保存的位置或其他有关session的配置可以在`php.ini`中
 - session.auto_start = 0 是否默认开启session
 - session.serialize_handler = php 序列化句柄；设置存储session的序列化方式，默认为php的serialize()
 
-## 销毁session
+## [销毁session](#销毁session)
 
 session.php   
 ``` php
@@ -463,7 +463,7 @@ php.ini:
 
 即垃圾回收机制触发的条件：经过1440s后文件没有改动，且session_start()执行了1000次，那么就会自动删除符合条件的session文件
 
-## session入库
+## [session入库](#session入库)
 
 php.ini:
 
@@ -486,13 +486,13 @@ php.ini:
 ...
 
 
-## session销毁
+## [session销毁](#session销毁)
 
 - session_destroy() 销毁一个会话中的全部数据，即销毁掉对应的session文件
 
 在验证时，可以先验证用户的账号密码是否正确，之后将username写入到$_SESSION中，其他页面可以根据$_SESSION是否有这个username来判断是否登陆成功；登出的时候调用session_destroy函数，即可删除后端session文件，即将用户状态设为了登出
 
-## cookie与session安全
+## [cookie与session安全](#cookie与session安全)
 
 login.php    
 ``` php
