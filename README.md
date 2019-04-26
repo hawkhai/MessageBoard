@@ -37,7 +37,16 @@
 	-vcode.php 生成验证码
 	-sql.php 封装好了一个用于php操作mysql的类
 
+---
+2019.4.26
 
+了解了session的基本原理，简单实现了用户的登录和登出功能[session_login_and_logout](#session_login_and_logout)
+
+文件结构：
+
+	- index.php 根据是否存在$_SESSION['username']来判断用户是否已登陆
+	- login.php 登陆页面
+	- logout.php 实现用户登出，并重定向到index.php
 
 # [php操作数据库](#php操作数据库)
 
@@ -177,6 +186,11 @@ var_dump($res);
 
 但执行query方法时，并不能用此方法看到是否执行成功，返回的错误码均为'00000'不知道原因是什么...
 
+## 预处理
+
+
+
+
 # [验证码设计](#验证码设计)
 
 - [GD库的基本使用](#GD库的基本使用)
@@ -275,18 +289,22 @@ $vcode->outimage();
 - [设置cookie](#设置cookie)
 - [获取cookie](#获取cookie)
 - [删除cookie](#删除cookie)
-- [session](#session)
-- [cookie与session，用哪个？](#cookie与session，用哪个？)
-
+- [设置session](#设置session)
+- [销毁session](#销毁session)
+- [session入库](#session入库)
+- [cookie与session安全](#cookie与session安全)
 
 ## [无状态HTTP](#无状态HTTP)
+用户每次发起HTTP请求，服务器都无法识别这个请求是哪个用户发起的；因此，产生了cookie与session，在页面之间传递信息
 
 HTTP请求头：
+
 - Content-Type: 发送的内容的MIME类型
 - Cookie：设置的cookie值
 
 
 HTTP响应头：
+
 - Content-Disposition: 指示客户端下载文件
 - Set-Cookie: 第一次访问服务器端，服务器端返回的cookie
 
@@ -372,7 +390,7 @@ setcookie('username', '', time()-1);
 
 	Set-Cookie: username=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0
 
-## [session](#session)
+## [设置session](#设置session)
 
 - $_SESSION:超全局变量数组
 - session_start():启动新会话或者重用现有会话
@@ -416,7 +434,7 @@ session文件保存的位置或其他有关session的配置可以在`php.ini`中
 - session.auto_start = 0 是否默认开启session
 - session.serialize_handler = php 序列化句柄；设置存储session的序列化方式，默认为php的serialize()
 
-## session销毁
+## 销毁session
 
 session.php   
 ``` php
@@ -439,9 +457,88 @@ $_SESSION['name'] = 'jack';
 
 php.ini:
 
+- session.gc_probability = 1 开启垃圾回收机制
 - session.gc_maxlifetime = 1440 经过1440s后文件没有改动，被认为此session文件是过期文件
 - session.gc_divisor = 1000 session_start()启动1000次，会启动垃圾回收机制，删除过期文件；
 
+即垃圾回收机制触发的条件：经过1440s后文件没有改动，且session_start()执行了1000次，那么就会自动删除符合条件的session文件
+
+## session入库
+
+php.ini:
+
+- session.save_handler = user
+
+系统默认定义的存储session的方式是`file`，流程为：
+
+	打开
+	关闭
+	读取
+	写入
+	销毁
+	回收
+
+若要自定义session存储方式，则需要重写相关函数
+
+- session_set_sava_handler() 设置用户自定义会话存储函数
+
+
+...
+
+
+## session销毁
+
+- session_destroy() 销毁一个会话中的全部数据，即销毁掉对应的session文件
+
+在验证时，可以先验证用户的账号密码是否正确，之后将username写入到$_SESSION中，其他页面可以根据$_SESSION是否有这个username来判断是否登陆成功；登出的时候调用session_destroy函数，即可删除后端session文件，即将用户状态设为了登出
+
+## cookie与session安全
+
+login.php    
+``` php
+<?php
+
+session_start();
+if(isset($_SESSION['username'])){
+	echo 'login success! welcome ' . $_SESSION['username'] . '<br>';
+```
+
+如果login.php中有这句代码，且temp下生成了对应的session文件sess_jgt7f1d9e7fn6sbsua6cn8l6m6，内容为
+
+	username|s:5:"admin";
+
+则可以直接用这个session_id，来实现登陆后的状态
+
+``` python
+import requests
+
+url = 'http://127.0.0.1/Messageboard/logout/index.php'
+
+
+headers = {'Cookie':'PHPSESSID=jgt7f1d9e7fn6sbsua6cn8l6m6'}
+req = requests.get(url, headers=headers)
+
+print(req.text)
+```
+
+运行结果：
+
+	login success! welcome admin<br>
+	
+		<form action='./logout.php'>
+	
+		<input type='submit' value='logout'></input>
+	
+		</form>
+
+那么如何才能防止这种情况呢？
+
+session文件中可以存储许多有关用户的信息，浏览器版本、请求ip等，如果发现这些与用户请求时的不同，则可以创建一个新的会话，从而避免这种危险情况
+
+
+但如果使用的是cookie机制，而不是session机制：cookie设置的主要信息是一个键值对，且只存在于客户端；如果cookie泄露(XSS)，那么攻击者可轻易的模拟用户登录
+
+...
 
 
 # [数据库管理](#数据库管理)
