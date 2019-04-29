@@ -54,6 +54,26 @@
 - [连接数据库](#连接数据库)
 - [操作数据库](#操作数据库)
 
+---
+2019.4.29
+
+留言板完工[MessageBoard](MessageBoard)
+
+文件结构：
+
+	- index.php 留言、显示
+	- login.php 登录
+	- logout.php 登出
+	- register.php 注册
+	- mysql.php 数据库类
+	- vcode.php 绘制验证码类
+	- vcode.txt 验证码存储
+
+总结：这次留言板设计虽然很简陋，几乎只用到了html和php，但至少功能还是实现了；这么简单的一个小应用其实用到的知识点挺多的，比如session机制实现会话控制，控制登录登出；数据库设计时要考虑外键和unique约束用户名；前后端交互显示；还有就是稍不注意就会出现各种bug，比如mysql注入、xss等；以后设计时应考虑的更加周到
+
+logout按钮好有违和感~
+
+![](https://i.imgur.com/Lu6ceE5.png)
 
 ## [选择数据库api](#选择数据库api)
 
@@ -436,6 +456,7 @@ session文件保存的位置或其他有关session的配置可以在`php.ini`中
 
 ## [销毁session](#销毁session)
 
+### 自动销毁
 session.php   
 ``` php
 <?php
@@ -463,6 +484,13 @@ php.ini:
 
 即垃圾回收机制触发的条件：经过1440s后文件没有改动，且session_start()执行了1000次，那么就会自动删除符合条件的session文件
 
+### 主动销毁
+
+- session_destroy() 销毁一个会话中的全部数据，即销毁掉对应的session文件
+
+在验证时，可以先验证用户的账号密码是否正确，之后将username写入到$_SESSION中，其他页面可以根据$_SESSION是否有这个username来判断是否登陆成功；登出的时候调用session_destroy函数，即可删除后端session文件，即将用户状态设为了登出
+
+
 ## [session入库](#session入库)
 
 php.ini:
@@ -485,12 +513,6 @@ php.ini:
 
 ...
 
-
-## [session销毁](#session销毁)
-
-- session_destroy() 销毁一个会话中的全部数据，即销毁掉对应的session文件
-
-在验证时，可以先验证用户的账号密码是否正确，之后将username写入到$_SESSION中，其他页面可以根据$_SESSION是否有这个username来判断是否登陆成功；登出的时候调用session_destroy函数，即可删除后端session文件，即将用户状态设为了登出
 
 ## [cookie与session安全](#cookie与session安全)
 
@@ -543,37 +565,79 @@ session文件中可以存储许多有关用户的信息，浏览器版本、请�
 
 # [数据库管理](#数据库管理)
 
-用数据库需要存储用户的：
+外键的使用条件：
 
-- 用户名：小于等于16位；
-- 密码：小于等于16位；
-- 留言时间：日期、时间；
-- 留言内容：最多65535个字符；
+- 两个表必须是InnoDB表，MyISAM表暂时不支持外键（据说以后的版本有可能支持，但至少目前不支持）；如果在建表时没有指定存储引擎，可以用`show create table name`来查看存储引擎类型
+- 外键列必须建立了索引，MySQL 4.1.2以后的版本在建立外键时会自动创建索引，但如果在较早的版本则需要显示建立； 
+- 外键关系的两个表的列必须是数据类型相似，也就是可以相互转换类型的列，比如int和tinyint可以，而int和char则不可以；
 
+外键的好处：
 
-创建表语句为：
+- 可以使得两张表关联，保证数据的一致性和实现一些级联操作；
+
+表users：
+
+- id(主键)
+- username(外键)：小于等于16位；unique约束
+- password：小于等于16位；
 	
-	create table test1(
-	    -> id int unsigned not null auto_increment,
-	    -> username varchar(16) not null,
-	    -> password varchar(16) not null,
-	    -> time datetime not null,
-	    -> content text not null,
-	    -> primary key(id)
-	    -> );
+表message：
 
-表结构：
+- id(主键)
+- users_id(外键，与表users主键一致)
+- username：与users中一致
+- content：留言内容
+- time：留言时间
 
-	mysql> desc test1;
-	+----------+------------------+------+-----+---------+----------------+
-	| Field    | Type             | Null | Key | Default | Extra          |
-	+----------+------------------+------+-----+---------+----------------+
-	| id       | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
-	| username | varchar(16)      | NO   |     | NULL    |                |
-	| password | varchar(16)      | NO   |     | NULL    |                |
-	| time     | datetime         | NO   |     | NULL    |                |
-	| content  | text             | NO   |     | NULL    |                |
-	+----------+------------------+------+-----+---------+----------------+
+
+创建表users语句为：
+	
+	CREATE TABLE `users` (
+	  `id` int NOT NULL AUTO_INCREMENT,
+	  `username` varchar(16) NOT NULL,
+	  `password` varchar(16) NOT NULL,
+	  PRIMARY KEY (`id`),
+	  unique(username)
+	) ENGINE=InnoDB;
+
+结构：
+
+	mysql> desc users;
+	+----------+-------------+------+-----+---------+----------------+
+	| Field    | Type        | Null | Key | Default | Extra          |
+	+----------+-------------+------+-----+---------+----------------+
+	| id       | int(11)     | NO   | PRI | NULL    | auto_increment |
+	| username | varchar(16) | NO   | UNI | NULL    |                |
+	| password | varchar(16) | NO   |     | NULL    |                |
+	+----------+-------------+------+-----+---------+----------------+
+
+创建表message语句为：
+
+	CREATE TABLE `message` (
+	  `id` int NOT NULL AUTO_INCREMENT,
+	  `users_id` int DEFAULT NULL,
+	  `username` varchar(16) NOT NULL,
+	  `content` text NOT NULL,
+	  `time` datetime NOT NULL,
+	  PRIMARY KEY (`id`),
+	  KEY `users_id` (`users_id`),
+	  CONSTRAINT `message_table` FOREIGN KEY (`users_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+	) ENGINE=InnoDB;
+
+结构：
+	
+	mysql> desc message;
+	+----------+-------------+------+-----+---------+----------------+
+	| Field    | Type        | Null | Key | Default | Extra          |
+	+----------+-------------+------+-----+---------+----------------+
+	| id       | int(11)     | NO   | PRI | NULL    | auto_increment |
+	| users_id | int(11)     | YES  | MUL | NULL    |                |
+	| username | varchar(16) | NO   |     | NULL    |                |
+	| content  | text        | NO   |     | NULL    |                |
+	| time     | datetime    | NO   |     | NULL    |                |
+	+----------+-------------+------+-----+---------+----------------+
+
+
 
 # [留言板页面布局](#留言板页面布局)
 
@@ -587,7 +651,7 @@ session文件中可以存储许多有关用户的信息，浏览器版本、请�
 
 # [其他设计](#其他设计)
 
-时间：
+## 时间：
 
 使用date()函数获取当前时间时，需要设置时区，不知道为什么直接在php.ini中设置失败，在php文件开头加上下面这句话就可以：
 
@@ -599,4 +663,10 @@ session文件中可以存储许多有关用户的信息，浏览器版本、请�
 那么将两者拼接即可得到数据库的datetime格式：
 
 	date("Y-m-d") . ' ' . date('H:i:s')
+
+--- 
+
+想到了一个更好的方法，可以直接在mysql中使用now()函数来实现存储留言时间
+
+
 
