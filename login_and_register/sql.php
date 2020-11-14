@@ -5,7 +5,7 @@ class Mysql {
     public $username;
     public $password; //接收到的用户名和密码
     public $pdo; //pdo对象
-    public $db_username = 'root';
+    public $db_username = 'MessageBoard';
     public $db_password = '123456';
     public $sql; //sql语句
     public $res; //执行查询语句返回的对象
