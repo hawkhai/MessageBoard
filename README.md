@@ -525,7 +525,7 @@ login.php
 <?php
 
 session_start();
-if(isset($_SESSION['username'])){
+if (isset($_SESSION['username'])){
 	echo 'login success! welcome ' . $_SESSION['username'] . '<br>';
 ```
 
